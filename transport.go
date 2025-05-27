@@ -1,5 +1,5 @@
-// Package throttle provides a http.RoundTripper to throttle http requests.
-package throttle
+// Package httpthrottle provides a http.RoundTripper to throttle http requests.
+package httpthrottle
 
 import (
 	"context"

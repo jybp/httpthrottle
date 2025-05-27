@@ -1,8 +1,9 @@
-package throttle
+package httpthrottle
 
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 )
 
@@ -13,6 +14,7 @@ type Quota struct {
 	Interval time.Duration
 	Limit    int
 
+	mu   sync.Mutex
 	c    int
 	from time.Time
 }
@@ -29,6 +31,8 @@ var ErrQuotaExceeded = errors.New("quota exceeded")
 
 // Wait does not block but returns ErrQuotaExceeded when the Limit is reached.
 func (q *Quota) Wait(ctx context.Context) error {
+	q.mu.Lock()
+	defer q.mu.Unlock()
 	now := time.Now().UTC()
 	if q.from == (time.Time{}) {
 		q.from = now

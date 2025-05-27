@@ -1,16 +1,16 @@
-package throttle_test
+package httpthrottle_test
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	throttle "github.com/jybp/http-throttle"
+	"github.com/jybp/httpthrottle"
 )
 
 func TestQuota(t *testing.T) {
 	ctx := context.Background()
-	q := throttle.NewQuota(time.Millisecond*10, 2)
+	q := httpthrottle.NewQuota(time.Millisecond*10, 2)
 	assertFn := func() {
 		if err := q.Wait(ctx); err != nil {
 			t.Fatal(err)
@@ -18,10 +18,10 @@ func TestQuota(t *testing.T) {
 		if err := q.Wait(ctx); err != nil {
 			t.Fatal(err)
 		}
-		if err := q.Wait(ctx); err != throttle.ErrQuotaExceeded {
+		if err := q.Wait(ctx); err != httpthrottle.ErrQuotaExceeded {
 			t.Fatal("ErrQuotaExceeded expected", err)
 		}
-		if err := q.Wait(ctx); err != throttle.ErrQuotaExceeded {
+		if err := q.Wait(ctx); err != httpthrottle.ErrQuotaExceeded {
 			t.Fatal("ErrQuotaExceeded expected", err)
 		}
 	}

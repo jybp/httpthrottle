@@ -1,4 +1,4 @@
-package throttle_test
+package httpthrottle_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	throttle "github.com/jybp/http-throttle"
+	"github.com/jybp/httpthrottle"
 	"golang.org/x/time/rate"
 )
 
@@ -18,7 +18,7 @@ func TestTransport(t *testing.T) {
 			w.WriteHeader(http.StatusTooManyRequests)
 		}
 	}))
-	client := &http.Client{Transport: &throttle.Transport{Limiter: rate.NewLimiter(rate.Every(time.Millisecond*10), 2)}}
+	client := &http.Client{Transport: &httpthrottle.Transport{Limiter: rate.NewLimiter(rate.Every(time.Millisecond*10), 2)}}
 	assertStatusFn := func(expected int) {
 		resp, err := client.Get(srv.URL)
 		if err != nil {
@@ -35,8 +35,8 @@ func TestTransport(t *testing.T) {
 }
 
 func TestMultiLimiter(t *testing.T) {
-	l := throttle.MultiLimiters(
-		throttle.NewQuota(time.Second, 101),
+	l := httpthrottle.MultiLimiters(
+		httpthrottle.NewQuota(time.Second, 101),
 		rate.NewLimiter(rate.Every(time.Millisecond), 1),
 	)
 	start := time.Now()
@@ -48,22 +48,22 @@ func TestMultiLimiter(t *testing.T) {
 	if elapsed := time.Since(start); elapsed < time.Millisecond*100 {
 		t.Fatalf("101 wait took %v", elapsed)
 	}
-	if err := l.Wait(context.Background()); err != throttle.ErrQuotaExceeded {
+	if err := l.Wait(context.Background()); err != httpthrottle.ErrQuotaExceeded {
 		t.Fatal(err)
 	}
 }
 
 // Wait won't block if a Quota is reached.
 func TestMultiLimiterQuota(t *testing.T) {
-	l := throttle.MultiLimiters(
+	l := httpthrottle.MultiLimiters(
 		rate.NewLimiter(1, 1),
-		throttle.NewQuota(time.Second, 1),
+		httpthrottle.NewQuota(time.Second, 1),
 	)
 	start := time.Now()
 	if err := l.Wait(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if err := l.Wait(context.Background()); err != throttle.ErrQuotaExceeded {
+	if err := l.Wait(context.Background()); err != httpthrottle.ErrQuotaExceeded {
 		t.Fatal(err)
 	}
 	if elapsed := time.Since(start); elapsed > time.Second {
@@ -73,15 +73,15 @@ func TestMultiLimiterQuota(t *testing.T) {
 
 func Example() {
 	client := &http.Client{
-		Transport: throttle.Default(
+		Transport: httpthrottle.Default(
 			// Returns ErrQuotaExceeded if more than 36000 requests occured within an hour.
-			throttle.NewQuota(time.Hour, 36000),
+			httpthrottle.NewQuota(time.Hour, 36000),
 			// Blocks to never exceed 99 requests per second.
 			rate.NewLimiter(99, 1),
 		),
 	}
 	resp, err := client.Get("https://golang.org/")
-	if err == throttle.ErrQuotaExceeded {
+	if err == httpthrottle.ErrQuotaExceeded {
 		// Handle err.
 	}
 	if err != nil {
