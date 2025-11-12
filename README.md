@@ -10,6 +10,7 @@ Package httpthrottle provides a http.RoundTripper to rate limit HTTP requests.
 package example
 
 import (
+    "errors"
     "net/http"
     "github.com/jybp/httpthrottle"
     "golang.org/x/time/rate"
@@ -25,7 +26,7 @@ func Example() {
         ),
     }
     resp, err := client.Get("https://golang.org/")
-    if err == httpthrottle.ErrQuotaExceeded {
+    if errors.Is(err, httpthrottle.ErrQuotaExceeded) {
         // Handle err.
     }
     if err != nil {
